@@ -1,0 +1,48 @@
+BEGIN;
+
+CREATE TYPE PR_STATUS AS ENUM ('OPEN', 'MERGED');
+
+CREATE TABLE users
+(
+    id         UUID PRIMARY KEY         DEFAULT UUIDV7(),
+    name       VARCHAR(255) NOT NULL UNIQUE,
+    is_active  BOOLEAN      NOT NULL    DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE teams
+(
+    id         UUID PRIMARY KEY         DEFAULT UUIDV7(),
+    name       VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_teams
+(
+    user_id    UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    team_id    UUID NOT NULL REFERENCES teams (id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, team_id)
+);
+
+CREATE TABLE pull_requests
+(
+    id         UUID PRIMARY KEY         DEFAULT UUIDV7(),
+    title      VARCHAR(255) NOT NULL,
+    author_id  UUID         NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    status     PR_STATUS    NOT NULL    DEFAULT 'OPEN',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE reviewers
+(
+    pr_id      UUID NOT NULL REFERENCES pull_requests (id) ON DELETE CASCADE,
+    user_id    UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (pr_id, user_id)
+);
+
+COMMIT;
