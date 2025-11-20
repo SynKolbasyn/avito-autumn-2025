@@ -6,6 +6,8 @@ linters:
     - wsl_v5
   disable:
     - wsl
+    - depguard
+    - exhaustruct
 
 issues:
   fix: true
