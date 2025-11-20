@@ -11,13 +11,13 @@ import (
 func main() {
 	logger.InitLogger()
 
-	e := echo.New()
-	e.HideBanner = true
-	e.HidePort = true
+	echoServer := echo.New()
+	echoServer.HideBanner = true
+	echoServer.HidePort = true
 
-	server.SetupMiddleware(e)
-	server.RegisterRoutes(e)
-	server.StartServer(e)
+	server.SetupMiddleware(echoServer)
+	server.RegisterRoutes(echoServer)
+	server.StartServer(echoServer)
 }
 
 

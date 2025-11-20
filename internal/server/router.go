@@ -1,3 +1,4 @@
+// Package server contains functions for work with echo web server framework.
 package server
 
 import (
@@ -7,8 +8,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func RegisterRoutes(e *echo.Echo) {
-	e.GET("/health", func(c echo.Context) error {
+// RegisterRoutes registers HTTP routes on the provided Echo instance.
+func RegisterRoutes(echoServer *echo.Echo) {
+	echoServer.GET("/health", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{
 			"status":    "ok",
 			"timestamp": time.Now().Format(time.RFC3339),

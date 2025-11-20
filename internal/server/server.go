@@ -1,9 +1,9 @@
+// Package server contains functions for work with echo web server framework.
 package server
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,21 +14,37 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func StartServer(e *echo.Echo) {
+const readTimeout = 10 * time.Second
+const writeTimeout = 10 * time.Second
+const idleTimeout = 120 * time.Second
+const shutdownTimeout = 10 * time.Second
+
+// StartServer starts the Echo HTTP server on the port defined in the SERVER_PORT
+// environment variable. It configures the underlying http.Server with read, write,
+// and idle timeouts to improve server robustness.
+//
+// The server runs in a separate goroutine so that the function can listen for OS
+// termination signals (SIGINT, SIGTERM). Upon receiving such a signal, StartServer
+// initiates a graceful shutdown with a 10-second timeout to allow ongoing requests
+// to complete before closing.
+func StartServer(echoServer *echo.Echo) {
 	port := os.Getenv("SERVER_PORT")
 
-	addr := fmt.Sprintf(":%s", port)
+	addr := ":" + port
 
 	server := &http.Server{
 		Addr:         addr,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  120 * time.Second,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
+		IdleTimeout:  idleTimeout,
 	}
 
 	go func() {
 		log.Info().Msgf("Starting server on %s", addr)
-		if err := e.StartServer(server); err != nil && !errors.Is(err, http.ErrServerClosed) {
+
+		err := echoServer.StartServer(server)
+
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error().Err(err).Msg("Server shutdown error")
 			os.Exit(1)
 		}
@@ -40,10 +56,11 @@ func StartServer(e *echo.Echo) {
 
 	log.Info().Msg("Shutting down server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	if err := e.Shutdown(ctx); err != nil {
+	err := echoServer.Shutdown(ctx)
+	if err != nil {
 		log.Error().Err(err).Msg("Server shutdown error")
 	}
 
