@@ -1,4 +1,3 @@
-// Package server contains functions for work with echo web server framework.
 package server
 
 import (
