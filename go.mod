@@ -3,6 +3,7 @@ module autumn-2025
 go 1.25
 
 require (
+	github.com/caarlos0/env/v10 v10.0.0 // indirect
 	github.com/labstack/echo/v4 v4.13.4 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
