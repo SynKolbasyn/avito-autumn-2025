@@ -4,7 +4,6 @@ import (
 	"autumn-2025/internal/models/dto"
 	"autumn-2025/internal/repositories"
 	"autumn-2025/internal/services"
-	"context"
 	"errors"
 	"net/http"
 
@@ -13,13 +12,11 @@ import (
 )
 
 type TeamHandler struct {
-	ctx         context.Context
 	teamService *services.TeamService
 }
 
-func NewTeamHandler(ctx context.Context, repository repositories.TeamRepository) *TeamHandler {
+func NewTeamHandler(repository repositories.TeamRepository) *TeamHandler {
 	return &TeamHandler{
-		ctx:         ctx,
 		teamService: services.NewTeamService(repository),
 	}
 }
@@ -31,7 +28,7 @@ func (handler *TeamHandler) Add(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	team, err := handler.teamService.CreateTeam(handler.ctx, team)
+	team, err := handler.teamService.CreateTeam(c.Request().Context(), team)
 	if err != nil {
 		log.Info().Err(err).Msg("teamService.CreateTeam failed")
 		if errors.Is(err, repositories.TeamAlreadyExistsError) {
