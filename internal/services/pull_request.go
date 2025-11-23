@@ -1,6 +1,13 @@
 package services
 
-import "autumn-2025/internal/repositories"
+import (
+	"autumn-2025/internal/models/dto"
+	"autumn-2025/internal/repositories"
+	"context"
+	"math/rand/v2"
+
+	"github.com/google/uuid"
+)
 
 type PullRequestService struct {
 	pullRequestRepository repositories.PullRequestRepository
@@ -12,8 +19,45 @@ func NewPullRequestService(repository repositories.PullRequestRepository) *PullR
 	}
 }
 
-func (pr *PullRequestService) CreatePullRequest() {
+func (pr *PullRequestService) CreatePullRequest(ctx context.Context, pullRequest dto.PullRequestCreate) (dto.PullRequestCreated, error) {
+	var assignedReviewers []uuid.UUID
+	err := pr.pullRequestRepository.WithTransaction(ctx, func(txCtx context.Context) error {
+		ok := pr.pullRequestRepository.CreatePR(
+			txCtx,
+			pullRequest.PullRequestID,
+			pullRequest.PullRequestName,
+			pullRequest.AuthorID,
+		)
 
+		if !ok {
+			return dto.PullRequestExists(pullRequest.PullRequestID)
+		}
+
+		teamMembersIDs, err := pr.pullRequestRepository.GetTeamMembersIDs(txCtx, pullRequest.AuthorID)
+		if err != nil || len(teamMembersIDs) == 0 {
+			return dto.NotFound()
+		}
+
+		if len(teamMembersIDs) > 1 {
+			rand.Shuffle(len(teamMembersIDs), func(i, j int) { teamMembersIDs[i], teamMembersIDs[j] = teamMembersIDs[j], teamMembersIDs[i] })
+			teamMembersIDs = teamMembersIDs[:2]
+		}
+		err = pr.pullRequestRepository.AssignMembers(txCtx, pullRequest.PullRequestID, teamMembersIDs)
+
+		if err != nil {
+			return dto.InternalError()
+		}
+		assignedReviewers = teamMembersIDs
+		return nil
+	})
+	if err != nil {
+		return dto.PullRequestCreated{}, err
+	}
+	return dto.PullRequestCreated{
+		PullRequestCreate: pullRequest,
+		Status:            dto.PullRequestStatusOpen,
+		AssignedReviewers: assignedReviewers,
+	}, nil
 }
 
 func (pr *PullRequestService) MergePullRequest() {

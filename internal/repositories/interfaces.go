@@ -34,4 +34,7 @@ type TeamRepository interface {
 
 type PullRequestRepository interface {
 	TransactionManager
+	CreatePR(ctx context.Context, prID uuid.UUID, prName string, prAuthor uuid.UUID) bool
+	GetTeamMembersIDs(ctx context.Context, prAuthorID uuid.UUID) ([]uuid.UUID, error)
+	AssignMembers(ctx context.Context, pullRequestID uuid.UUID, teamMembersIDs []uuid.UUID) error
 }
