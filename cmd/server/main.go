@@ -27,6 +27,6 @@ func main() {
 	echoServer.HidePort = true
 
 	server.SetupMiddleware(echoServer)
-	server.RegisterRoutes(echoServer, pool)
+	server.RegisterRoutes(echoServer, context.Background(), pool)
 	server.Start(echoServer, cfg.ServerAddress())
 }
