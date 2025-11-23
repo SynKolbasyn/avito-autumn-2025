@@ -6,28 +6,28 @@ const (
 )
 
 type Error struct {
-	code    string
-	message string
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 type ErrorResponse struct {
-	error Error
+	Error Error `json:"error"`
 }
 
 func TeamAlreadyExists(teamName string) ErrorResponse {
 	return ErrorResponse{
-		error: Error{
-			code:    teamAlreadyExistsCode,
-			message: teamName + "already exists",
+		Error: Error{
+			Code:    teamAlreadyExistsCode,
+			Message: teamName + "already exists",
 		},
 	}
 }
 
 func NotFound() ErrorResponse {
 	return ErrorResponse{
-		error: Error{
-			code:    notFoundCode,
-			message: "resource not found",
+		Error: Error{
+			Code:    notFoundCode,
+			Message: "resource not found",
 		},
 	}
 }

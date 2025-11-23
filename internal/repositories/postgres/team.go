@@ -75,6 +75,10 @@ func (t *TeamRepository) CreateTeam(ctx context.Context, teamName string) (uuid.
 }
 
 func (t *TeamRepository) InsertOrUpdateUsers(ctx context.Context, teamMembers []dto.TeamMember) ([]uuid.UUID, error) {
+	if len(teamMembers) == 0 {
+		return []uuid.UUID{}, nil
+	}
+
 	var (
 		valuesCount = 3
 		query       strings.Builder
@@ -112,6 +116,10 @@ func (t *TeamRepository) InsertOrUpdateUsers(ctx context.Context, teamMembers []
 }
 
 func (t *TeamRepository) AddTeamMembers(ctx context.Context, teamID uuid.UUID, memberIDS []uuid.UUID) error {
+	if len(memberIDS) == 0 {
+		return nil
+	}
+
 	var (
 		valuesCount = 2
 		query       strings.Builder
@@ -143,9 +151,11 @@ func (t *TeamRepository) AddTeamMembers(ctx context.Context, teamID uuid.UUID, m
 
 func (t *TeamRepository) GetTeamByName(ctx context.Context, teamName string) (dto.Team, error) {
 	query := `
-	SELECT user_id, name, is_active
-	FROM user_teams AS ut
-	INNER JOIN users AS u ON (u.id = ut.user_id) AND (ut.team_id = (SELECT id FROM teams WHERE name = $1))
+	SELECT u.id, u.name, u.is_active
+	FROM teams AS t
+	LEFT JOIN user_teams AS ut ON ut.team_id = t.id
+	LEFT JOIN users AS u ON u.id = ut.user_id
+	WHERE t.name = $1
 	`
 	executor := t.GetExecutor(ctx)
 
@@ -166,7 +176,7 @@ func (t *TeamRepository) GetTeamByName(ctx context.Context, teamName string) (dt
 
 		err = rows.Scan(&userID, &name, &isActive)
 		if err != nil {
-			return dto.Team{}, fmt.Errorf("failed to scan user in team row: %w", err)
+			continue
 		}
 
 		teamMembers = append(teamMembers, dto.TeamMember{
@@ -174,6 +184,14 @@ func (t *TeamRepository) GetTeamByName(ctx context.Context, teamName string) (dt
 			Username: name,
 			IsActive: isActive,
 		})
+	}
+
+	if rows.CommandTag().RowsAffected() == 0 {
+		return dto.Team{}, pgx.ErrNoRows
+	}
+
+	if len(teamMembers) == 0 {
+		teamMembers = []dto.TeamMember{}
 	}
 
 	return dto.Team{
