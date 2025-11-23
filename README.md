@@ -18,19 +18,20 @@ this will up 2 containers: `postgres` and `service`
 
 ## Lint
 
-I'm using `golangci-lint` as project linter.
-CI pipeline placing at `.github/workflows/lint.yaml`.
-You can also find configuration in `.golangci.yaml`. 
+I'm using [`golangci-lint`](https://github.com/golangci/golangci-lint) as project linter.
+CI pipeline placing at [`.github/workflows/lint.yaml`](.github/workflows/lint.yaml).
+You can also find configuration in [`.golangci.yaml`](.golangci.yaml). 
 
 ## Load testing
 
-I'm using `siege` for load tests:
+I'm using [`siege`](https://github.com/JoeDog/siege) for load tests:
 
 ```bash
 siege -c 4 -b -t 10s http://localhost:8080/health
 ```
 
 output:
+
 ```
 Transactions:                  13043 hits
 Availability:                 100.00 %
