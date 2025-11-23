@@ -35,9 +35,15 @@ type TeamRepository interface {
 type PullRequestRepository interface {
 	TransactionManager
 	CreatePR(ctx context.Context, prID uuid.UUID, prName string, prAuthor uuid.UUID) bool
-	GetTeamMembersIDs(ctx context.Context, prAuthorID uuid.UUID) ([]uuid.UUID, error)
+	GetActiveTeamMembersIDs(ctx context.Context, prAuthorID uuid.UUID) ([]uuid.UUID, error)
 	AssignMembers(ctx context.Context, pullRequestID uuid.UUID, teamMembersIDs []uuid.UUID) error
 	Merged(ctx context.Context, pullRequestID uuid.UUID) (dto.PullRequestMerged, bool)
 	Merge(ctx context.Context, pullRequestID uuid.UUID) (dto.PullRequestMerged, error)
 	GetReviewersIDs(ctx context.Context, pullRequestID uuid.UUID) ([]uuid.UUID, error)
+}
+
+type UserRepository interface {
+	TransactionManager
+	SetUserIsActive(ctx context.Context, userID uuid.UUID, isActive bool) (dto.TeamMember, bool)
+	GetUserTeam(ctx context.Context, userID uuid.UUID) (string, error)
 }

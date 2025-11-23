@@ -54,11 +54,15 @@ func (r *PullRequestRepository) CreatePR(ctx context.Context, prID uuid.UUID, pr
 	return ok
 }
 
-func (r *PullRequestRepository) GetTeamMembersIDs(ctx context.Context, prAuthorID uuid.UUID) ([]uuid.UUID, error) {
+func (r *PullRequestRepository) GetActiveTeamMembersIDs(
+	ctx context.Context,
+	prAuthorID uuid.UUID,
+) ([]uuid.UUID, error) {
 	query := `
 	SELECT ut.user_id
 	FROM user_teams AS ut
-	WHERE (ut.team_id = (SELECT u.team_id FROM user_teams AS u WHERE u.user_id = $1)) AND ut.user_id != $1;
+	INNER JOIN users AS us ON (ut.user_id = us.id) AND (us.is_active = TRUE)
+	WHERE (ut.team_id = (SELECT u.team_id FROM user_teams AS u WHERE u.user_id = $1)) AND (ut.user_id != $1);
 	`
 	executor := r.GetExecutor(ctx)
 

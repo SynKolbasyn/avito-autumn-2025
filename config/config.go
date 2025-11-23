@@ -1,4 +1,3 @@
-// Package config provides utilities for application configuration management.
 package config
 
 import (
@@ -11,11 +10,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Config holds the application's configuration settings, primarily loaded from environment variables.
-// Each field corresponds to a specific configuration parameter, with default values provided via struct tags
-// for use when the respective environment variable is not set. The env package is expected to be used for parsing.
-// Fields include server and postgres database connection settings, as well as the logging level (LogLevel),
-// which is not loaded via env tags but set separately based on the LOG_LEVEL environment variable.
 type Config struct {
 	ServerPort int    `env:"SERVER_PORT" envDefault:"8080"`
 	DBHost     string `env:"DB_HOST"     envDefault:"postgres"`
@@ -42,12 +36,6 @@ func parseLogLevel(logLevelStr string) zerolog.Level {
 	return zerolog.InfoLevel
 }
 
-// LoadConfig loads the application configuration from environment variables.
-// It uses the 'env' package to automatically parse environment variables into the Config struct.
-// The log level is read separately from the LOG_LEVEL environment variable and mapped to a zerolog level
-// using the logMap; if the provided value is invalid or missing, it defaults to InfoLevel.
-// If parsing fails, an error is logged and a wrapped error is returned.
-// Upon successful loading, key configuration values (server port, database host/port/name) are logged for visibility.
 func LoadConfig() (*Config, error) {
 	cfg := &Config{}
 

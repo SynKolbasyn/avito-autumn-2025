@@ -13,6 +13,7 @@ func RegisterRoutes(server *echo.Echo, pool *pgxpool.Pool) {
 	server.GET("/health", handlers.GetHealth)
 	registerTeamRoutes(server, pool)
 	registerPullRequestRoutes(server, pool)
+	RegisterUsersRouter(server, pool)
 }
 
 func registerTeamRoutes(server *echo.Echo, pool *pgxpool.Pool) {
@@ -30,4 +31,12 @@ func registerPullRequestRoutes(server *echo.Echo, pool *pgxpool.Pool) {
 	group.POST("/create", teamHandler.Create)
 	group.POST("/merge", teamHandler.Merge)
 	group.POST("/reassign", teamHandler.Reassign)
+}
+
+func RegisterUsersRouter(server *echo.Echo, pool *pgxpool.Pool) {
+	usersRepository := postgres.NewUsersRepository(pool)
+	teamHandler := handlers.NewUsersHandler(usersRepository)
+	group := server.Group("/users")
+	group.POST("/setIsActive", teamHandler.SetIsActive)
+	group.POST("/getReview", teamHandler.GetReview)
 }
