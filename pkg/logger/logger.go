@@ -13,9 +13,6 @@ import (
 // InitLogger initializes the global logger using zerolog.
 // The time format for log entries is set to RFC3339 for readability and standardization.
 // Logs are output to the console (standard output) using a human-friendly format.
-// The logging level is set dynamically based on the ENV environment variable:
-// - In "production" mode, the log level is set to InfoLevel (info and above).
-// - In other environments, it is set to DebugLevel (verbose logging for development).
 func InitLogger(logLevel zerolog.Level) {
 	zerolog.TimeFieldFormat = time.RFC3339
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
