@@ -8,6 +8,8 @@ linters:
     - wsl
     - depguard
     - exhaustruct
+    - tagliatelle
+    - revive
 
 issues:
-  fix: true
+  fix: false
