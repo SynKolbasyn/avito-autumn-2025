@@ -56,10 +56,24 @@ func (handler *TeamHandler) Add(ctx echo.Context) error {
 	return nil
 }
 
-func (handler *TeamHandler) Get(c echo.Context) error {
-	err := c.JSON(http.StatusNotImplemented, "not implemented")
+func (handler *TeamHandler) Get(ctx echo.Context) error {
+	teamName := ctx.QueryParam("team_name")
+
+	team, err := handler.teamService.GetTeam(ctx.Request().Context(), teamName)
 	if err != nil {
-		return fmt.Errorf("TeamHandler.Get: %w", err)
+		log.Error().Err(err).Str("team_name", teamName).Msg("teamService.GetTeam failed")
+
+		err = ctx.JSON(http.StatusNotFound, dto.NotFound())
+		if err != nil {
+			return fmt.Errorf("failed to serialize dto.NotFound: %w", err)
+		}
+
+		return nil
+	}
+
+	err = ctx.JSON(http.StatusOK, team)
+	if err != nil {
+		return fmt.Errorf("failed to serialize team: %w", err)
 	}
 
 	return nil

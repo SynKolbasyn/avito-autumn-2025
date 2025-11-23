@@ -140,3 +140,44 @@ func (t *TeamRepository) AddTeamMembers(ctx context.Context, teamID uuid.UUID, m
 
 	return nil
 }
+
+func (t *TeamRepository) GetTeamByName(ctx context.Context, teamName string) (dto.Team, error) {
+	query := `
+	SELECT user_id, name, is_active
+	FROM user_teams AS ut
+	INNER JOIN users AS u ON (u.id = ut.user_id) AND (ut.team_id = (SELECT id FROM teams WHERE name = $1))
+	`
+	executor := t.GetExecutor(ctx)
+
+	rows, err := executor.Query(ctx, query, teamName)
+	if err != nil {
+		return dto.Team{}, fmt.Errorf("failed to get query team by name: %w", err)
+	}
+	defer rows.Close()
+
+	var teamMembers []dto.TeamMember
+
+	for rows.Next() {
+		var (
+			userID   uuid.UUID
+			name     string
+			isActive bool
+		)
+
+		err = rows.Scan(&userID, &name, &isActive)
+		if err != nil {
+			return dto.Team{}, fmt.Errorf("failed to scan user in team row: %w", err)
+		}
+
+		teamMembers = append(teamMembers, dto.TeamMember{
+			UserID:   userID,
+			Username: name,
+			IsActive: isActive,
+		})
+	}
+
+	return dto.Team{
+		TeamName: teamName,
+		Members:  teamMembers,
+	}, nil
+}

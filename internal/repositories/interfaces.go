@@ -29,4 +29,5 @@ type TeamRepository interface {
 	CreateTeam(ctx context.Context, teamName string) (uuid.UUID, error)
 	InsertOrUpdateUsers(ctx context.Context, teamMembers []dto.TeamMember) ([]uuid.UUID, error)
 	AddTeamMembers(ctx context.Context, teamID uuid.UUID, memberIDS []uuid.UUID) error
+	GetTeamByName(ctx context.Context, teamName string) (dto.Team, error)
 }

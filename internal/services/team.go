@@ -42,3 +42,12 @@ func (t *TeamService) CreateTeam(ctx context.Context, team dto.Team) (dto.Team, 
 
 	return team, nil
 }
+
+func (t *TeamService) GetTeam(ctx context.Context, teamName string) (dto.Team, error) {
+	team, err := t.teamRepository.GetTeamByName(ctx, teamName)
+	if err != nil {
+		return dto.Team{}, fmt.Errorf("cannot get team by name: %w", err)
+	}
+
+	return team, nil
+}
