@@ -31,3 +31,7 @@ type TeamRepository interface {
 	AddTeamMembers(ctx context.Context, teamID uuid.UUID, memberIDS []uuid.UUID) error
 	GetTeamByName(ctx context.Context, teamName string) (dto.Team, error)
 }
+
+type PullRequestRepository interface {
+	TransactionManager
+}
