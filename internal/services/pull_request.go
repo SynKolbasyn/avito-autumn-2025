@@ -37,7 +37,7 @@ func (pr *PullRequestService) CreatePullRequest(
 			return dto.PullRequestExists(pullRequest.PullRequestID)
 		}
 
-		teamMembersIDs, err := pr.pullRequestRepository.GetTeamMembersIDs(txCtx, pullRequest.AuthorID)
+		teamMembersIDs, err := pr.pullRequestRepository.GetActiveTeamMembersIDs(txCtx, pullRequest.AuthorID)
 		if err != nil || len(teamMembersIDs) == 0 {
 			return dto.NotFound()
 		}
