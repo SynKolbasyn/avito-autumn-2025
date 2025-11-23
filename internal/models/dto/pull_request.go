@@ -1,12 +1,16 @@
 package dto
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type PullRequestStatus string
 
 const (
 	PullRequestStatusOpen   PullRequestStatus = "OPEN"
-	PullRequestStatusClosed PullRequestStatus = "CLOSED"
+	PullRequestStatusMerged PullRequestStatus = "MERGED"
 )
 
 type PullRequestCreate struct {
@@ -20,4 +24,13 @@ type PullRequestCreated struct {
 
 	Status            PullRequestStatus `json:"status"`
 	AssignedReviewers []uuid.UUID       `json:"assigned_reviewers"`
+}
+
+type PullRequestMerge struct {
+	PullRequestID uuid.UUID `json:"pull_request_id"`
+}
+
+type PullRequestMerged struct {
+	PullRequestCreated
+	MergedAt time.Time `json:"merged_at"`
 }

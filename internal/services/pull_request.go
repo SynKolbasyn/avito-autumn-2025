@@ -70,8 +70,30 @@ func (pr *PullRequestService) CreatePullRequest(
 	}, nil
 }
 
-func (pr *PullRequestService) MergePullRequest() {
-
+func (pr *PullRequestService) MergePullRequest(ctx context.Context, prMerge dto.PullRequestMerge) (dto.PullRequestMerged, error) {
+	var mergedPullRequest dto.PullRequestMerged
+	err := pr.pullRequestRepository.WithTransaction(ctx, func(txCtx context.Context) error {
+		existingPR, exists := pr.pullRequestRepository.Merged(txCtx, prMerge.PullRequestID)
+		if !exists {
+			mergedPr, err := pr.pullRequestRepository.Merge(txCtx, prMerge.PullRequestID)
+			if err != nil {
+				return dto.NotFound()
+			}
+			existingPR = mergedPr
+		}
+		prReviewers, err := pr.pullRequestRepository.GetReviewersIDs(txCtx, prMerge.PullRequestID)
+		if err != nil {
+			return dto.NotFound()
+		}
+		existingPR.AssignedReviewers = prReviewers
+		mergedPullRequest = existingPR
+		return nil
+	})
+	if err != nil {
+		//nolint:wrapcheck
+		return dto.PullRequestMerged{}, err
+	}
+	return mergedPullRequest, nil
 }
 
 func (pr *PullRequestService) ReassignPullRequest() {
