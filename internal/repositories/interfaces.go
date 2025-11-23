@@ -1,8 +1,10 @@
 package repositories
 
 import (
+	"autumn-2025/internal/models/dto"
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -24,5 +26,7 @@ type TransactionManager interface {
 
 type TeamRepository interface {
 	TransactionManager
-	CreateTeam(ctx context.Context, teamName string) error
+	CreateTeam(ctx context.Context, teamName string) (uuid.UUID, error)
+	InsertOrUpdateUsers(ctx context.Context, teamMembers []dto.TeamMember) ([]uuid.UUID, error)
+	AddTeamMembers(ctx context.Context, teamID uuid.UUID, memberIDS []uuid.UUID) error
 }
