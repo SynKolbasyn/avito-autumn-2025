@@ -9,9 +9,9 @@ import (
 )
 
 func Pool(ctx context.Context, cfg *config.Config) *pgxpool.Pool {
-	pool, err := pgxpool.New(ctx, cfg.ServerAddress())
+	pool, err := pgxpool.New(ctx, cfg.DBConnectionString())
 	if err != nil {
-		log.Fatal().Err(err).Str("server_address", cfg.ServerAddress()).Msg("failed to create database pool")
+		log.Fatal().Err(err).Str("server_address", cfg.DBConnectionString()).Msg("failed to create database pool")
 	}
 	return pool
 }
