@@ -16,14 +16,8 @@ import (
 // The logging level is set dynamically based on the ENV environment variable:
 // - In "production" mode, the log level is set to InfoLevel (info and above).
 // - In other environments, it is set to DebugLevel (verbose logging for development).
-func InitLogger() {
+func InitLogger(logLevel zerolog.Level) {
 	zerolog.TimeFieldFormat = time.RFC3339
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
-
-	env := os.Getenv("ENV")
-	if env == "production" {
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	} else {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
+	zerolog.SetGlobalLevel(logLevel)
 }
