@@ -10,6 +10,9 @@ linters:
     - exhaustruct
     - tagliatelle
     - revive
+    - ireturn
+    - mnd
+    - nosprintfhostport
 
 issues:
   fix: false
