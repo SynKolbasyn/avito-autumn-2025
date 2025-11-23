@@ -4,6 +4,7 @@ import (
 	"autumn-2025/internal/models/dto"
 	"autumn-2025/internal/repositories"
 	"context"
+	"fmt"
 )
 
 type TeamService struct {
@@ -17,22 +18,26 @@ func NewTeamService(repository repositories.TeamRepository) *TeamService {
 }
 
 func (t *TeamService) CreateTeam(ctx context.Context, team dto.Team) (dto.Team, error) {
-	err := t.teamRepository.WithTransaction(ctx, func(c context.Context) error {
-		id, err := t.teamRepository.CreateTeam(c, team.TeamName)
+	err := t.teamRepository.WithTransaction(ctx, func(txCtx context.Context) error {
+		teamID, err := t.teamRepository.CreateTeam(txCtx, team.TeamName)
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot create team: %w", err)
 		}
 
-		ids, err := t.teamRepository.InsertOrUpdateUsers(c, team.Members)
+		userIDs, err := t.teamRepository.InsertOrUpdateUsers(txCtx, team.Members)
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot insert or update users: %w", err)
 		}
 
-		return t.teamRepository.AddTeamMembers(c, id, ids)
+		err = t.teamRepository.AddTeamMembers(txCtx, teamID, userIDs)
+		if err != nil {
+			return fmt.Errorf("cannot add team members: %w", err)
+		}
+
+		return nil
 	})
-
 	if err != nil {
-		return dto.Team{}, err
+		return dto.Team{}, fmt.Errorf("cannot add team members: %w", err)
 	}
 
 	return team, nil

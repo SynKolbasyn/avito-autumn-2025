@@ -13,5 +13,6 @@ func Pool(ctx context.Context, cfg *config.Config) *pgxpool.Pool {
 	if err != nil {
 		log.Fatal().Err(err).Str("server_address", cfg.DBConnectionString()).Msg("failed to create database pool")
 	}
+
 	return pool
 }

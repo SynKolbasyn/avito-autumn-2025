@@ -1,7 +1,5 @@
 package dto
 
-import "fmt"
-
 const (
 	teamAlreadyExistsCode = "TEAM_EXISTS"
 )
@@ -19,7 +17,7 @@ func TeamAlreadyExists(teamName string) ErrorResponse {
 	return ErrorResponse{
 		error: Error{
 			code:    teamAlreadyExistsCode,
-			message: fmt.Sprintf("%s already exists", teamName),
+			message: teamName + "already exists",
 		},
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"autumn-2025/internal/models/dto"
 	"autumn-2025/internal/repositories"
 	"autumn-2025/internal/services"
-	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -21,25 +21,46 @@ func NewTeamHandler(repository repositories.TeamRepository) *TeamHandler {
 	}
 }
 
-func (handler *TeamHandler) Add(c echo.Context) error {
+func (handler *TeamHandler) Add(ctx echo.Context) error {
 	var team dto.Team
-	if err := c.Bind(&team); err != nil {
-		log.Info().Err(err).Msg("StatusBadRequest")
-		return c.JSON(http.StatusBadRequest, err)
-	}
 
-	team, err := handler.teamService.CreateTeam(c.Request().Context(), team)
+	err := ctx.Bind(&team)
 	if err != nil {
-		log.Info().Err(err).Msg("teamService.CreateTeam failed")
-		if errors.Is(err, repositories.TeamAlreadyExistsError) {
-			return c.JSON(http.StatusConflict, dto.TeamAlreadyExists(team.TeamName))
+		log.Info().Err(err).Msg("StatusBadRequest")
+
+		err = ctx.JSON(http.StatusBadRequest, err)
+		if err != nil {
+			return fmt.Errorf("failed to serialize validation error: %w", err)
 		}
-		return c.JSON(http.StatusBadRequest, "Something went wrong")
+
+		return nil
 	}
 
-	return c.JSON(http.StatusCreated, map[string]dto.Team{"team": team})
+	team, err = handler.teamService.CreateTeam(ctx.Request().Context(), team)
+	if err != nil {
+		log.Info().Err(err).Fields(team).Msg("teamService.CreateTeam failed")
+
+		err = ctx.JSON(http.StatusBadRequest, dto.TeamAlreadyExists(team.TeamName))
+		if err != nil {
+			return fmt.Errorf("failed to serialize TeamAlreadyExists: %w", err)
+		}
+
+		return nil
+	}
+
+	err = ctx.JSON(http.StatusCreated, map[string]dto.Team{"team": team})
+	if err != nil {
+		return fmt.Errorf("failed to serialize team: %w", err)
+	}
+
+	return nil
 }
 
 func (handler *TeamHandler) Get(c echo.Context) error {
-	return c.JSON(http.StatusNotImplemented, "not implemented")
+	err := c.JSON(http.StatusNotImplemented, "not implemented")
+	if err != nil {
+		return fmt.Errorf("TeamHandler.Get: %w", err)
+	}
+
+	return nil
 }

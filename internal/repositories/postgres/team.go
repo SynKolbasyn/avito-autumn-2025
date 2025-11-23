@@ -4,8 +4,8 @@ import (
 	"autumn-2025/internal/models/dto"
 	"autumn-2025/internal/repositories"
 	"context"
-	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -21,28 +21,37 @@ func NewTeamRepository(pool *pgxpool.Pool) *TeamRepository {
 	return &TeamRepository{pool}
 }
 
-func (t *TeamRepository) WithTransaction(ctx context.Context, f func(ctx context.Context) error) error {
-	tx, err := t.pool.Begin(ctx)
+func (t *TeamRepository) WithTransaction(ctx context.Context, function func(ctx context.Context) error) error {
+	transaction, err := t.pool.Begin(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot start transaction: %w", err)
 	}
+
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
-			log.Error().Err(err).Msg("failed to rollback transaction")
+		rbErr := transaction.Rollback(ctx)
+		if rbErr != nil {
+			log.Error().Err(rbErr).Msg("failed to rollback transaction")
 		}
 	}()
 
-	if err := f(context.WithValue(ctx, repositories.TxContextKey, tx)); err != nil {
-		return err
+	err = function(context.WithValue(ctx, repositories.TxContextKey, transaction))
+	if err != nil {
+		return fmt.Errorf("transaction error: %w", err)
 	}
 
-	return tx.Commit(ctx)
+	err = transaction.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("cannot commit transaction: %w", err)
+	}
+
+	return nil
 }
 
 func (t *TeamRepository) GetExecutor(ctx context.Context) repositories.Executor {
 	if tx, ok := ctx.Value(repositories.TxContextKey).(pgx.Tx); ok {
 		return tx
 	}
+
 	return t.pool
 }
 
@@ -54,61 +63,80 @@ func (t *TeamRepository) CreateTeam(ctx context.Context, teamName string) (uuid.
 	`
 	executor := t.GetExecutor(ctx)
 	row := executor.QueryRow(ctx, query, teamName)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return uuid.UUID{}, repositories.TeamAlreadyExistsError
-	}
+
+	var teamID uuid.UUID
+
+	err := row.Scan(&teamID)
 	if err != nil {
-		return uuid.UUID{}, err
+		return uuid.UUID{}, fmt.Errorf("failed to insert team: %w", err)
 	}
-	return id, nil
+
+	return teamID, nil
 }
 
 func (t *TeamRepository) InsertOrUpdateUsers(ctx context.Context, teamMembers []dto.TeamMember) ([]uuid.UUID, error) {
 	var (
 		valuesCount = 3
-		query       = "INSERT INTO users (id, name, is_active) VALUES "
-		params      = make([]interface{}, 0, len(teamMembers)*valuesCount)
+		query       strings.Builder
+		params      = make([]any, 0, len(teamMembers)*valuesCount)
 		ids         = make([]uuid.UUID, 0, len(teamMembers))
 	)
+	query.WriteString("INSERT INTO users (id, name, is_active) VALUES ")
+
 	for i, user := range teamMembers {
 		if i > 0 {
-			query += ", "
+			query.WriteString(", ")
 		}
-		query += fmt.Sprintf("($%d, $%d, $%d)", valuesCount*i+1, valuesCount*i+2, valuesCount*i+3)
+
+		query.WriteString(fmt.Sprintf("($%d, $%d, $%d)", valuesCount*i+1, valuesCount*i+2, valuesCount*i+3))
+
 		params = append(params, user.UserID, user.Username, user.IsActive)
 		ids = append(ids, user.UserID)
 	}
-	query += `
+
+	query.WriteString(`
     ON CONFLICT (id) DO UPDATE SET
 		name = EXCLUDED.name,
 		is_active = EXCLUDED.is_active,
 		updated_at = CURRENT_TIMESTAMP;
-    `
+    `)
+
 	executor := t.GetExecutor(ctx)
-	_, err := executor.Exec(ctx, query, params...)
+
+	_, err := executor.Exec(ctx, query.String(), params...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update users: %w", err)
 	}
-	return ids, err
+
+	return ids, nil
 }
 
 func (t *TeamRepository) AddTeamMembers(ctx context.Context, teamID uuid.UUID, memberIDS []uuid.UUID) error {
 	var (
 		valuesCount = 2
-		query       = "INSERT INTO user_teams (user_id, team_id) VALUES "
-		params      = make([]interface{}, 0, len(memberIDS)*valuesCount)
+		query       strings.Builder
+		params      = make([]any, 0, len(memberIDS)*valuesCount)
 	)
+	query.WriteString("INSERT INTO user_teams (user_id, team_id) VALUES ")
+
 	for i, memberID := range memberIDS {
 		if i > 0 {
-			query += ", "
+			query.WriteString(", ")
 		}
-		query += fmt.Sprintf("($%d, $%d)", valuesCount*i+1, valuesCount*i+2)
+
+		query.WriteString(fmt.Sprintf("($%d, $%d)", valuesCount*i+1, valuesCount*i+2))
+
 		params = append(params, memberID, teamID)
 	}
-	query += "ON CONFLICT (user_id, team_id) DO NOTHING;"
+
+	query.WriteString("ON CONFLICT (user_id, team_id) DO NOTHING;")
+
 	executor := t.GetExecutor(ctx)
-	_, err := executor.Exec(ctx, query, params...)
-	return err
+
+	_, err := executor.Exec(ctx, query.String(), params...)
+	if err != nil {
+		return fmt.Errorf("failed to add team members to users: %w", err)
+	}
+
+	return nil
 }

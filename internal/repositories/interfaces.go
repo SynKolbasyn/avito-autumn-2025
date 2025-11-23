@@ -20,7 +20,7 @@ type Executor interface {
 }
 
 type TransactionManager interface {
-	WithTransaction(ctx context.Context, f func(ctx context.Context) error) error
+	WithTransaction(ctx context.Context, function func(ctx context.Context) error) error
 	GetExecutor(ctx context.Context) Executor
 }
 

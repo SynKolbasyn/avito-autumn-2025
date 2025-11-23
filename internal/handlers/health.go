@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -8,8 +9,13 @@ import (
 )
 
 func GetHealth(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]string{
+	err := c.JSON(http.StatusOK, map[string]string{
 		"status":    "ok",
 		"timestamp": time.Now().Format(time.RFC3339),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to serialize health: %w", err)
+	}
+
+	return nil
 }
