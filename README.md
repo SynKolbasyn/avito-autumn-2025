@@ -1,6 +1,22 @@
 # Avito autumn 2025 test task
 
+- [Project start](#Project-start)
+  - [Configuration](#Configuration)
+  - [Services up](#Services-up)
+- [Lint](#Lint)
+- [Load testing](#Load-testing)
+
 ## Project start
+
+### Configuration
+
+If you want to configure service you must copy [`.env.example`](.env.example) to `.env` and change values for what you want.
+
+```bash
+cp .env.example .env
+```
+
+### Services up
 
 You can use either
 
@@ -21,6 +37,18 @@ this will up 2 containers: `postgres` and `service`
 I'm using [`golangci-lint`](https://github.com/golangci/golangci-lint) as project linter.
 CI pipeline placing at [`.github/workflows/lint.yaml`](.github/workflows/lint.yaml).
 You can also find configuration in [`.golangci.yaml`](.golangci.yaml). 
+
+You can check project using either
+
+```bash
+make lint
+```
+
+or
+
+```bash
+golangci-lint run ./...
+```
 
 ## Load testing
 
