@@ -32,5 +32,6 @@ type PullRequestMerge struct {
 
 type PullRequestMerged struct {
 	PullRequestCreated
+
 	MergedAt time.Time `json:"merged_at"`
 }

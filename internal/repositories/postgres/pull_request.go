@@ -126,6 +126,7 @@ func (r *PullRequestRepository) Merged(ctx context.Context, pullRequestID uuid.U
 	query := "SELECT id, title, author_id, status, merged_at FROM pull_requests WHERE id = $1 AND status = 'MERGED';"
 	executor := r.GetExecutor(ctx)
 	row := executor.QueryRow(ctx, query, pullRequestID)
+
 	var (
 		prID       uuid.UUID
 		prName     string
@@ -133,10 +134,12 @@ func (r *PullRequestRepository) Merged(ctx context.Context, pullRequestID uuid.U
 		prStatus   dto.PullRequestStatus
 		prMergedAt time.Time
 	)
+
 	err := row.Scan(&prID, &prName, &prAuthorID, &prStatus, &prMergedAt)
 	if err != nil {
 		return dto.PullRequestMerged{}, false
 	}
+
 	return dto.PullRequestMerged{
 		PullRequestCreated: dto.PullRequestCreated{
 			PullRequestCreate: dto.PullRequestCreate{
@@ -159,6 +162,7 @@ func (r *PullRequestRepository) Merge(ctx context.Context, pullRequestID uuid.UU
 		prStatus   dto.PullRequestStatus
 		prMergedAt time.Time
 	)
+
 	query := `
 	UPDATE pull_requests
 	SET status = $1,
@@ -168,10 +172,12 @@ func (r *PullRequestRepository) Merge(ctx context.Context, pullRequestID uuid.UU
 	`
 	executor := r.GetExecutor(ctx)
 	row := executor.QueryRow(ctx, query, dto.PullRequestStatusMerged, pullRequestID)
+
 	err := row.Scan(&prID, &prName, &prAuthorID, &prStatus, &prMergedAt)
 	if err != nil {
 		return dto.PullRequestMerged{}, fmt.Errorf("error merging pull request: %w", err)
 	}
+
 	return dto.PullRequestMerged{
 		PullRequestCreated: dto.PullRequestCreated{
 			PullRequestCreate: dto.PullRequestCreate{
@@ -189,22 +195,29 @@ func (r *PullRequestRepository) Merge(ctx context.Context, pullRequestID uuid.UU
 func (r *PullRequestRepository) GetReviewersIDs(ctx context.Context, pullRequestID uuid.UUID) ([]uuid.UUID, error) {
 	query := "SELECT user_id FROM reviewers WHERE pr_id = $1;"
 	executor := r.GetExecutor(ctx)
+
 	rows, err := executor.Query(ctx, query, pullRequestID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting reviewers IDs: %w", err)
 	}
 	defer rows.Close()
+
 	var reviewers []uuid.UUID
+
 	for rows.Next() {
 		var reviewerID uuid.UUID
+
 		err = rows.Scan(&reviewerID)
 		if err != nil {
 			return nil, fmt.Errorf("error getting reviewer ID: %w", err)
 		}
+
 		reviewers = append(reviewers, reviewerID)
 	}
+
 	if len(reviewers) == 0 {
 		reviewers = []uuid.UUID{}
 	}
+
 	return reviewers, nil
 }
