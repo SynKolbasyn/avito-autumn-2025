@@ -122,5 +122,10 @@ func (handler *PullRequestHandler) Merge(ctx echo.Context) error {
 }
 
 func (handler *PullRequestHandler) Reassign(ctx echo.Context) error {
+	err := ctx.JSON(http.StatusNotImplemented, dto.InternalError())
+	if err != nil {
+		return fmt.Errorf("failed to serialize service error: %w", err)
+	}
+
 	return nil
 }
