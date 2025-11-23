@@ -4,6 +4,7 @@ import (
 	"autumn-2025/internal/models/dto"
 	"autumn-2025/internal/repositories"
 	"context"
+	"fmt"
 )
 
 type UsersService struct {
@@ -16,21 +17,27 @@ func NewUsersService(repository repositories.UserRepository) *UsersService {
 
 func (u *UsersService) SetUserIsActive(ctx context.Context, user dto.SetUserIsActive) (dto.UserWithTeam, error) {
 	var userWithTeam dto.UserWithTeam
+
 	err := u.userRepository.WithTransaction(ctx, func(txCtx context.Context) error {
 		teamMember, updated := u.userRepository.SetUserIsActive(txCtx, user.UserID, user.IsActive)
 		if !updated {
 			return dto.NotFound()
 		}
+
 		teamName, err := u.userRepository.GetUserTeam(txCtx, user.UserID)
 		if err != nil {
-			return err
+			return fmt.Errorf("user without team found: %w", err)
 		}
+
 		userWithTeam.TeamMember = teamMember
 		userWithTeam.TeamName = teamName
+
 		return nil
 	})
 	if err != nil {
+		//nolint:wrapcheck
 		return dto.UserWithTeam{}, err
 	}
+
 	return userWithTeam, nil
 }

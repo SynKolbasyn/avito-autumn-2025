@@ -15,5 +15,6 @@ type SetUserIsActive struct {
 
 type UserWithTeam struct {
 	TeamMember
+
 	TeamName string `json:"team_name"`
 }

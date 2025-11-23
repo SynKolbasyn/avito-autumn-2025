@@ -54,7 +54,10 @@ func (r *PullRequestRepository) CreatePR(ctx context.Context, prID uuid.UUID, pr
 	return ok
 }
 
-func (r *PullRequestRepository) GetActiveTeamMembersIDs(ctx context.Context, prAuthorID uuid.UUID) ([]uuid.UUID, error) {
+func (r *PullRequestRepository) GetActiveTeamMembersIDs(
+	ctx context.Context,
+	prAuthorID uuid.UUID,
+) ([]uuid.UUID, error) {
 	query := `
 	SELECT ut.user_id
 	FROM user_teams AS ut

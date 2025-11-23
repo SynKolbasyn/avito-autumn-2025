@@ -3,6 +3,7 @@ package postgres
 import (
 	"autumn-2025/internal/models/dto"
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -25,15 +26,18 @@ func (u *UsersRepository) SetUserIsActive(ctx context.Context, userID uuid.UUID,
 	RETURNING id, name, is_active;`
 	executor := u.GetExecutor(ctx)
 	row := executor.QueryRow(ctx, query, isActive, userID)
+
 	var (
 		uID       uuid.UUID
 		uName     string
 		uIsActive bool
 	)
+
 	err := row.Scan(&uID, &uName, &uIsActive)
 	if err != nil {
 		return dto.TeamMember{}, false
 	}
+
 	return dto.TeamMember{
 		UserID:   uID,
 		Username: uName,
@@ -50,9 +54,11 @@ func (u *UsersRepository) GetUserTeam(ctx context.Context, userID uuid.UUID) (st
 	executor := u.GetExecutor(ctx)
 	row := executor.QueryRow(ctx, query, userID)
 	teamName := ""
+
 	err := row.Scan(&teamName)
 	if err != nil {
-		return teamName, err
+		return teamName, fmt.Errorf("error getting team name: %w", err)
 	}
+
 	return teamName, nil
 }

@@ -72,6 +72,7 @@ func (handler *PullRequestHandler) Create(ctx echo.Context) error {
 	return nil
 }
 
+//nolint:dupl
 func (handler *PullRequestHandler) Merge(ctx echo.Context) error {
 	var pullRequestMerge dto.PullRequestMerge
 

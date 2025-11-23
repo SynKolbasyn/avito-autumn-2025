@@ -20,8 +20,10 @@ func NewUsersHandler(repository repositories.UserRepository) *UsersHandler {
 	return &UsersHandler{usersService: services.NewUsersService(repository)}
 }
 
+//nolint:dupl
 func (handler *UsersHandler) SetIsActive(ctx echo.Context) error {
 	var setUserIsActive dto.SetUserIsActive
+
 	err := ctx.Bind(&setUserIsActive)
 	if err != nil {
 		log.Error().Err(err).Msg("cannot parse Users.SetIsActive body")
