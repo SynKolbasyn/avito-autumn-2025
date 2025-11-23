@@ -70,3 +70,11 @@ func LoadConfig() (*Config, error) {
 
 	return cfg, nil
 }
+
+func (cfg *Config) ServerAddress() string {
+	return fmt.Sprintf(":%d", cfg.ServerPort)
+}
+
+func (cfg *Config) DBConnectionString() string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBSSLMode)
+}
