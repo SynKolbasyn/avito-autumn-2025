@@ -24,21 +24,27 @@ func NewPullRequestHandler(repository repositories.PullRequestRepository) *PullR
 
 func (handler *PullRequestHandler) Create(ctx echo.Context) error {
 	var pullRequestCreate dto.PullRequestCreate
+
 	err := ctx.Bind(&pullRequestCreate)
 	if err != nil {
 		log.Error().Err(err).Msg("cannot parse PullRequest.Create body")
+
 		err = ctx.JSON(http.StatusBadRequest, err)
 		if err != nil {
 			return fmt.Errorf("failed to serialize StatusBadRequest: %w", err)
 		}
+
 		return nil
 	}
 
 	pullRequestCreated, err := handler.pullRequestService.CreatePullRequest(ctx.Request().Context(), pullRequestCreate)
 	if err != nil {
 		log.Error().Err(err).Fields(pullRequestCreate).Msg("cannot create pull request")
-		var errorResponse dto.ErrorResponse
+
+		var errorResponse dto.ResponseError
+
 		statusCode := http.StatusBadRequest
+
 		if errors.As(err, &errorResponse) {
 			switch errorResponse.ErrorDesc.Code {
 			case dto.PRExistsCode:
@@ -49,10 +55,12 @@ func (handler *PullRequestHandler) Create(ctx echo.Context) error {
 				statusCode = http.StatusInternalServerError
 			}
 		}
+
 		err = ctx.JSON(statusCode, err)
 		if err != nil {
 			return fmt.Errorf("failed to serialize StatusBadRequest: %w", err)
 		}
+
 		return nil
 	}
 
@@ -60,6 +68,7 @@ func (handler *PullRequestHandler) Create(ctx echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to serialize StatusBadRequest: %w", err)
 	}
+
 	return nil
 }
 

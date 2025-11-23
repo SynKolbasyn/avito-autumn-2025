@@ -19,17 +19,21 @@ func NewPullRequestService(repository repositories.PullRequestRepository) *PullR
 	}
 }
 
-func (pr *PullRequestService) CreatePullRequest(ctx context.Context, pullRequest dto.PullRequestCreate) (dto.PullRequestCreated, error) {
+func (pr *PullRequestService) CreatePullRequest(
+	ctx context.Context,
+	pullRequest dto.PullRequestCreate,
+) (dto.PullRequestCreated, error) {
 	var assignedReviewers []uuid.UUID
+
 	err := pr.pullRequestRepository.WithTransaction(ctx, func(txCtx context.Context) error {
-		ok := pr.pullRequestRepository.CreatePR(
+		prExists := pr.pullRequestRepository.CreatePR(
 			txCtx,
 			pullRequest.PullRequestID,
 			pullRequest.PullRequestName,
 			pullRequest.AuthorID,
 		)
 
-		if !ok {
+		if !prExists {
 			return dto.PullRequestExists(pullRequest.PullRequestID)
 		}
 
@@ -39,20 +43,26 @@ func (pr *PullRequestService) CreatePullRequest(ctx context.Context, pullRequest
 		}
 
 		if len(teamMembersIDs) > 1 {
-			rand.Shuffle(len(teamMembersIDs), func(i, j int) { teamMembersIDs[i], teamMembersIDs[j] = teamMembersIDs[j], teamMembersIDs[i] })
+			rand.Shuffle(len(teamMembersIDs), func(i, j int) {
+				teamMembersIDs[i], teamMembersIDs[j] = teamMembersIDs[j], teamMembersIDs[i]
+			})
 			teamMembersIDs = teamMembersIDs[:2]
 		}
-		err = pr.pullRequestRepository.AssignMembers(txCtx, pullRequest.PullRequestID, teamMembersIDs)
 
+		err = pr.pullRequestRepository.AssignMembers(txCtx, pullRequest.PullRequestID, teamMembersIDs)
 		if err != nil {
 			return dto.InternalError()
 		}
+
 		assignedReviewers = teamMembersIDs
+
 		return nil
 	})
 	if err != nil {
+		//nolint:wrapcheck
 		return dto.PullRequestCreated{}, err
 	}
+
 	return dto.PullRequestCreated{
 		PullRequestCreate: pullRequest,
 		Status:            dto.PullRequestStatusOpen,

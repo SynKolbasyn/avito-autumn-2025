@@ -17,6 +17,7 @@ type PullRequestCreate struct {
 
 type PullRequestCreated struct {
 	PullRequestCreate
+
 	Status            PullRequestStatus `json:"status"`
 	AssignedReviewers []uuid.UUID       `json:"assigned_reviewers"`
 }

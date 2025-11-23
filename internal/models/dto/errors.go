@@ -20,21 +20,23 @@ type Error struct {
 	Message string `json:"message"`
 }
 
-type ErrorResponse struct {
+type ResponseError struct {
 	ErrorDesc Error `json:"error"`
 }
 
-func (e ErrorResponse) Error() string {
+func (e ResponseError) Error() string {
 	var str strings.Builder
+
 	err := json.NewEncoder(&str).Encode(e)
 	if err != nil {
 		return fmt.Errorf("cannot encode error response: %w", err).Error()
 	}
+
 	return str.String()
 }
 
-func TeamAlreadyExists(teamName string) ErrorResponse {
-	return ErrorResponse{
+func TeamAlreadyExists(teamName string) ResponseError {
+	return ResponseError{
 		ErrorDesc: Error{
 			Code:    TeamAlreadyExistsCode,
 			Message: teamName + "already exists",
@@ -42,8 +44,8 @@ func TeamAlreadyExists(teamName string) ErrorResponse {
 	}
 }
 
-func NotFound() ErrorResponse {
-	return ErrorResponse{
+func NotFound() ResponseError {
+	return ResponseError{
 		ErrorDesc: Error{
 			Code:    NotFoundCode,
 			Message: "resource not found",
@@ -51,8 +53,8 @@ func NotFound() ErrorResponse {
 	}
 }
 
-func InternalError() ErrorResponse {
-	return ErrorResponse{
+func InternalError() ResponseError {
+	return ResponseError{
 		ErrorDesc: Error{
 			Code:    InternalErrorCode,
 			Message: "internal error",
@@ -60,8 +62,8 @@ func InternalError() ErrorResponse {
 	}
 }
 
-func PullRequestExists(pullRequestID uuid.UUID) ErrorResponse {
-	return ErrorResponse{
+func PullRequestExists(pullRequestID uuid.UUID) ResponseError {
+	return ResponseError{
 		ErrorDesc: Error{
 			Code:    PRExistsCode,
 			Message: fmt.Sprintf("PR %s already exists", pullRequestID),
