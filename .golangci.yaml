@@ -8,6 +8,11 @@ linters:
     - wsl
     - depguard
     - exhaustruct
+    - tagliatelle
+    - revive
+    - ireturn
+    - mnd
+    - nosprintfhostport
 
 issues:
-  fix: true
+  fix: false
