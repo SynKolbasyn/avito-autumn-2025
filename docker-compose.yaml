@@ -1,0 +1,39 @@
+services:
+  service:
+    build:
+      context: "./"
+      dockerfile: "./Dockerfile"
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-database}
+      - SERVER_PORT=${SERVER_PORT:-8080}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    ports: [ "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}" ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${SERVER_PORT:-8080}/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: "unless-stopped"
+
+  postgres:
+    image: "postgres:18-alpine"
+    hostname: "${POSTGRES_HOST:-postgres}"
+    environment:
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-database}
+    expose: [ "${POSTGRES_PORT:-5432}" ]
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: "unless-stopped"

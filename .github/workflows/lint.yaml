@@ -1,0 +1,13 @@
+on: [ push, pull_request ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: "v2.6"

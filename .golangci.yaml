@@ -1,0 +1,18 @@
+version: "2"
+
+linters:
+  default: all
+  enable:
+    - wsl_v5
+  disable:
+    - wsl
+    - depguard
+    - exhaustruct
+    - tagliatelle
+    - revive
+    - ireturn
+    - mnd
+    - nosprintfhostport
+
+issues:
+  fix: false
